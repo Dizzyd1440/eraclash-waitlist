@@ -1,1 +1,604 @@
 # eraclash-waitlist
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ERA-CLASH — AI Sports Showdown</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --red: #e8003a;
+      --red-glow: #ff1a4e;
+      --purple: #9b00ff;
+      --blue: #00c8ff;
+      --gold: #ffc940;
+      --dark: #060610;
+      --panel: rgba(255,255,255,0.04);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--dark);
+      color: #fff;
+      font-family: 'Rajdhani', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── CANVAS BG ── */
+    #bg-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* ── GLOW ORBS ── */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.35;
+      z-index: 0;
+      pointer-events: none;
+    }
+    .orb-red  { width: 700px; height: 700px; background: var(--red);    top: -150px; left: -200px; animation: pulse 6s ease-in-out infinite; }
+    .orb-pur  { width: 600px; height: 600px; background: var(--purple); top: -100px; right: -150px; animation: pulse 7s ease-in-out infinite 1s; }
+    .orb-blue { width: 400px; height: 400px; background: #0044ff;       bottom: 0;   right: 100px; animation: pulse 8s ease-in-out infinite 2s; }
+
+    @keyframes pulse {
+      0%,100% { transform: scale(1);    opacity: 0.35; }
+      50%      { transform: scale(1.12); opacity: 0.5; }
+    }
+
+    /* ── COURT FLOOR ── */
+    .court-floor {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 45vh;
+      background: linear-gradient(
+        to top,
+        rgba(155,0,255,0.12) 0%,
+        rgba(0,200,255,0.04) 40%,
+        transparent 100%
+      );
+      z-index: 0;
+      pointer-events: none;
+    }
+    .court-floor::before {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 600px; height: 300px;
+      border: 1px solid rgba(155,0,255,0.25);
+      border-radius: 50%;
+      box-shadow: 0 0 60px rgba(155,0,255,0.15), inset 0 0 60px rgba(155,0,255,0.08);
+    }
+
+    /* ── WRAPPER ── */
+    .wrapper {
+      position: relative;
+      z-index: 10;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 20px 60px;
+    }
+
+    /* ── NAV ── */
+    nav {
+      width: 100%;
+      max-width: 1100px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 28px 0 0;
+    }
+    .nav-logo {
+      font-family: 'Orbitron', monospace;
+      font-size: 13px;
+      letter-spacing: 4px;
+      color: rgba(255,255,255,0.5);
+      text-transform: uppercase;
+    }
+    .nav-tag {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 11px;
+      letter-spacing: 3px;
+      color: rgba(255,255,255,0.3);
+      text-transform: uppercase;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding-top: 60px;
+      gap: 0;
+    }
+
+    /* EC Hexagon */
+    .hex-wrap {
+      position: relative;
+      width: 160px;
+      height: 160px;
+      margin-bottom: 36px;
+      animation: float 4s ease-in-out infinite;
+    }
+    @keyframes float {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(-10px); }
+    }
+    .hex-svg {
+      width: 100%;
+      height: 100%;
+      filter: drop-shadow(0 0 30px rgba(0,200,255,0.6)) drop-shadow(0 0 60px rgba(155,0,255,0.4));
+    }
+    .hex-letters {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Orbitron', monospace;
+      font-size: 38px;
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--purple), var(--blue));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -2px;
+      filter: drop-shadow(0 0 12px rgba(0,200,255,0.8));
+    }
+
+    /* "WHO REALLY WINS" */
+    .headline-eyebrow {
+      font-family: 'Orbitron', monospace;
+      font-size: 11px;
+      letter-spacing: 6px;
+      color: var(--blue);
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      opacity: 0;
+      animation: fadein 0.8s ease 0.3s forwards;
+    }
+    .headline {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(64px, 12vw, 130px);
+      line-height: 0.88;
+      letter-spacing: 4px;
+      opacity: 0;
+      animation: fadein 0.8s ease 0.5s forwards;
+    }
+    .headline .who   { color: #fff; display: block; }
+    .headline .really{ color: var(--red-glow); display: block; -webkit-text-stroke: 1px rgba(232,0,58,0.6); }
+    .headline .wins  { color: #fff; display: block; }
+
+    .subhead {
+      margin-top: 20px;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: clamp(14px, 2.5vw, 19px);
+      font-weight: 600;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.5);
+      opacity: 0;
+      animation: fadein 0.8s ease 0.7s forwards;
+    }
+    .subhead span { color: var(--blue); }
+
+    @keyframes fadein {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── FEATURES ROW ── */
+    .features {
+      display: flex;
+      gap: 16px;
+      margin-top: 48px;
+      flex-wrap: wrap;
+      justify-content: center;
+      opacity: 0;
+      animation: fadein 0.8s ease 0.9s forwards;
+    }
+    .feat {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--panel);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 6px;
+      padding: 10px 18px;
+      backdrop-filter: blur(10px);
+    }
+    .feat-icon {
+      font-size: 18px;
+      line-height: 1;
+    }
+    .feat-text {
+      font-family: 'Orbitron', monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: rgba(255,255,255,0.7);
+    }
+    .feat-text .vs {
+      color: var(--red-glow);
+      font-weight: 700;
+    }
+
+    /* ── EMAIL FORM ── */
+    .form-section {
+      margin-top: 56px;
+      width: 100%;
+      max-width: 540px;
+      opacity: 0;
+      animation: fadein 0.8s ease 1.1s forwards;
+    }
+    .form-label {
+      font-family: 'Orbitron', monospace;
+      font-size: 11px;
+      letter-spacing: 4px;
+      color: var(--gold);
+      text-align: center;
+      display: block;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+    }
+    .form-row {
+      display: flex;
+      gap: 0;
+      border: 1px solid rgba(155,0,255,0.5);
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: 0 0 30px rgba(155,0,255,0.2), 0 0 60px rgba(0,200,255,0.1);
+      transition: box-shadow 0.3s;
+    }
+    .form-row:focus-within {
+      box-shadow: 0 0 40px rgba(155,0,255,0.45), 0 0 80px rgba(0,200,255,0.2);
+      border-color: rgba(0,200,255,0.7);
+    }
+    .form-row input[type="email"] {
+      flex: 1;
+      background: rgba(255,255,255,0.05);
+      border: none;
+      padding: 16px 20px;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      color: #fff;
+      letter-spacing: 1px;
+      outline: none;
+    }
+    .form-row input::placeholder { color: rgba(255,255,255,0.3); }
+    .form-row button {
+      background: linear-gradient(135deg, var(--red), #c0006e, var(--purple));
+      background-size: 200% 200%;
+      animation: gradshift 3s ease infinite;
+      border: none;
+      padding: 16px 28px;
+      font-family: 'Orbitron', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      color: #fff;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: opacity 0.2s, transform 0.15s;
+    }
+    .form-row button:hover  { opacity: 0.85; }
+    .form-row button:active { transform: scale(0.97); }
+
+    @keyframes gradshift {
+      0%,100% { background-position: 0% 50%; }
+      50%      { background-position: 100% 50%; }
+    }
+
+    .form-note {
+      text-align: center;
+      margin-top: 12px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.25);
+      letter-spacing: 1px;
+    }
+
+    /* Success state */
+    .success-msg {
+      display: none;
+      text-align: center;
+      padding: 24px;
+      background: rgba(0,200,255,0.08);
+      border: 1px solid rgba(0,200,255,0.3);
+      border-radius: 8px;
+    }
+    .success-msg.show { display: block; animation: fadein 0.5s ease; }
+    .success-msg h3 {
+      font-family: 'Orbitron', monospace;
+      font-size: 14px;
+      letter-spacing: 3px;
+      color: var(--blue);
+      margin-bottom: 8px;
+    }
+    .success-msg p {
+      font-size: 14px;
+      color: rgba(255,255,255,0.5);
+    }
+
+    /* ── DIVIDER ── */
+    .divider {
+      margin-top: 72px;
+      width: 100%;
+      max-width: 1100px;
+      height: 1px;
+      background: linear-gradient(to right, transparent, rgba(155,0,255,0.4), rgba(0,200,255,0.4), transparent);
+      opacity: 0;
+      animation: fadein 0.8s ease 1.3s forwards;
+    }
+
+    /* ── FEATURES GRID ── */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      width: 100%;
+      max-width: 1000px;
+      margin-top: 56px;
+      opacity: 0;
+      animation: fadein 0.8s ease 1.5s forwards;
+    }
+    .card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 10px;
+      padding: 32px 24px;
+      text-align: center;
+      backdrop-filter: blur(8px);
+      transition: border-color 0.3s, transform 0.3s;
+    }
+    .card:hover {
+      border-color: rgba(155,0,255,0.4);
+      transform: translateY(-4px);
+    }
+    .card-icon { font-size: 36px; margin-bottom: 16px; }
+    .card h3 {
+      font-family: 'Orbitron', monospace;
+      font-size: 11px;
+      letter-spacing: 3px;
+      color: var(--blue);
+      margin-bottom: 10px;
+    }
+    .card p {
+      font-size: 14px;
+      color: rgba(255,255,255,0.45);
+      line-height: 1.6;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      margin-top: 80px;
+      text-align: center;
+      font-size: 11px;
+      letter-spacing: 3px;
+      color: rgba(255,255,255,0.2);
+      font-family: 'Orbitron', monospace;
+    }
+
+    /* ── PARTICLES ── */
+    .particle {
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 1;
+      animation: rise linear infinite;
+    }
+    @keyframes rise {
+      0%   { transform: translateY(100vh) scale(0); opacity: 0; }
+      10%  { opacity: 1; }
+      90%  { opacity: 1; }
+      100% { transform: translateY(-20px) scale(1); opacity: 0; }
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 700px) {
+      .grid { grid-template-columns: 1fr; }
+      .features { gap: 10px; }
+      .feat { padding: 8px 12px; }
+      nav { flex-direction: column; gap: 8px; }
+      .form-row { flex-direction: column; border-radius: 8px; }
+      .form-row button { padding: 14px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="orb orb-red"></div>
+<div class="orb orb-pur"></div>
+<div class="orb orb-blue"></div>
+<div class="court-floor"></div>
+
+<div class="wrapper">
+
+  <!-- NAV -->
+  <nav>
+    <span class="nav-logo">ERA-CLASH</span>
+    <span class="nav-tag">PREDICT. ANALYZE. CLASH.</span>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+
+    <!-- Hex Logo -->
+    <div class="hex-wrap">
+      <svg class="hex-svg" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="hexGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#9b00ff;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#00c8ff;stop-opacity:1" />
+          </linearGradient>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+            <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <!-- Outer hex -->
+        <polygon
+          points="80,8 148,44 148,116 80,152 12,116 12,44"
+          fill="none"
+          stroke="url(#hexGrad)"
+          stroke-width="3"
+          filter="url(#glow)"
+        />
+        <!-- Inner hex -->
+        <polygon
+          points="80,22 134,52 134,108 80,138 26,108 26,52"
+          fill="rgba(6,6,16,0.85)"
+          stroke="rgba(155,0,255,0.3)"
+          stroke-width="1"
+        />
+      </svg>
+      <div class="hex-letters">EC</div>
+    </div>
+
+    <p class="headline-eyebrow">All Eras · All Legends · One AI</p>
+
+    <h1 class="headline">
+      <span class="who">WHO</span>
+      <span class="really">REALLY</span>
+      <span class="wins">WINS?</span>
+    </h1>
+
+    <p class="subhead">ERA-CLASH &nbsp;·&nbsp; <span>AI Sports Showdown</span></p>
+
+    <!-- Feature pills -->
+    <div class="features">
+      <div class="feat">
+        <span class="feat-icon">🏃</span>
+        <span class="feat-text">LEGENDS <span class="vs">VS</span> LEGENDS</span>
+      </div>
+      <div class="feat">
+        <span class="feat-icon">🏀</span>
+        <span class="feat-text">DYNASTIES <span class="vs">VS</span> DYNASTIES</span>
+      </div>
+      <div class="feat">
+        <span class="feat-icon">🏆</span>
+        <span class="feat-text">GREATNESS <span class="vs">VS</span> GREATNESS</span>
+      </div>
+    </div>
+
+    <!-- EMAIL FORM -->
+    <div class="form-section">
+      <span class="form-label">⚡ Get Early Access — Be First to Clash</span>
+
+      <div id="form-wrap">
+        <div class="form-row">
+          <input type="email" id="email-input" placeholder="Enter your email address" autocomplete="email" />
+          <button onclick="handleSubmit()">JOIN NOW</button>
+        </div>
+        <p class="form-note">No spam. Early access notification only.</p>
+      </div>
+
+      <div class="success-msg" id="success">
+        <h3>🔥 YOU'RE IN THE GAME</h3>
+        <p>We'll hit you when Era-Clash drops. Get ready to settle every debate.</p>
+      </div>
+    </div>
+
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- GRID -->
+  <div class="grid">
+    <div class="card">
+      <div class="card-icon">🤖</div>
+      <h3>AI Analysis Engine</h3>
+      <p>Our AI breaks down stats, era context, and matchup dynamics to simulate clashes no human could ref.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">📊</div>
+      <h3>Cross-Era Data</h3>
+      <p>Normalized stats from every era of professional sports. Finally compare players on equal footing.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">⚔️</div>
+      <h3>Predict &amp; Debate</h3>
+      <p>Make your call before the AI reveals its verdict. Challenge friends. Settle arguments forever.</p>
+    </div>
+  </div>
+
+  <footer>
+    <p>© 2025 ERA-CLASH · ERA-CLASH.COM · ALL RIGHTS RESERVED</p>
+  </footer>
+
+</div>
+
+<script>
+  // ── Particles ──
+  function spawnParticle() {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const size = Math.random() * 3 + 1;
+    const colors = ['rgba(155,0,255,0.7)','rgba(0,200,255,0.7)','rgba(232,0,58,0.6)','rgba(255,201,64,0.5)'];
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    const dur = Math.random() * 10 + 8;
+    const delay = Math.random() * 8;
+    Object.assign(p.style, {
+      width: size + 'px',
+      height: size + 'px',
+      background: color,
+      left: Math.random() * 100 + 'vw',
+      bottom: '-10px',
+      animationDuration: dur + 's',
+      animationDelay: delay + 's',
+      boxShadow: `0 0 ${size * 3}px ${color}`,
+    });
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), (dur + delay) * 1000);
+  }
+  for (let i = 0; i < 30; i++) spawnParticle();
+  setInterval(spawnParticle, 1200);
+
+  // ── Form Submit ──
+  function handleSubmit() {
+    const input = document.getElementById('email-input');
+    const email = input.value.trim();
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!re.test(email)) {
+      input.style.borderBottom = '2px solid var(--red-glow)';
+      input.style.background = 'rgba(232,0,58,0.08)';
+      input.placeholder = 'Enter a valid email';
+      setTimeout(() => {
+        input.style.borderBottom = '';
+        input.style.background = '';
+        input.placeholder = 'Enter your email address';
+      }, 2000);
+      return;
+    }
+
+    // Hide form, show success
+    document.getElementById('form-wrap').style.display = 'none';
+    document.getElementById('success').classList.add('show');
+
+    // TODO: wire to your backend / Mailchimp / ConvertKit / Supabase here
+    console.log('Email captured:', email);
+  }
+
+  // Allow Enter key
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('email-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') handleSubmit();
+    });
+  });
+</script>
+</body>
+</html>
