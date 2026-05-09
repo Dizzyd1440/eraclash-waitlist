@@ -1,22 +1,31 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>EraClash — The Ultimate Sports Era Simulator</title>
-  <!-- Replace the href below if you have an external CSS file, otherwise styles are inline -->
   <style>
+    :root {
+      /* 🔥 CHANGE THESE THREE VALUES to match your logo/banner */
+      --brand-primary: #000107;   /* main accent color */
+      --brand-secondary: ##e360f6; /* gradient highlight or second color */
+      --bg-color: ###02061a;        /* dark background */
+      --text-color: ##23bef6;
+      --card-bg: rgba(255,255,255,0.05);
+    }
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      background: #0a0a0a;
+      background: var(--bg-color);
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      color: #fff;
+      color: var(--text-color);
       min-height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
       padding: 2rem;
-      background-image: radial-gradient(circle at 20% 30%, #1a1a2e 0%, #0a0a0a 90%);
+      background-image: radial-gradient(circle at 20% 30%, #1a1a2e 0%, var(--bg-color) 90%);
     }
     .container {
       max-width: 700px;
@@ -24,16 +33,15 @@
       text-align: center;
     }
     .logo {
-      max-width: 120px;
+      max-width: 140px;
       margin-bottom: 1.5rem;
     }
     h1 {
       font-size: clamp(2rem, 8vw, 3.4rem);
       font-weight: 800;
-      letter-spacing: -0.02em;
       line-height: 1.1;
       margin-bottom: 1rem;
-      background: linear-gradient(135deg, #ff6b35, #f7c948);
+      background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
@@ -54,19 +62,19 @@
       margin-bottom: 2.5rem;
     }
     .feature-item {
-      background: rgba(255,255,255,0.05);
+      background: var(--card-bg);
       padding: 1rem 1.2rem;
       border-radius: 12px;
       font-size: 0.95rem;
       line-height: 1.4;
     }
     .feature-item strong {
-      color: #ff6b35;
+      color: var(--brand-primary);
       display: block;
       margin-bottom: 0.3rem;
     }
     form {
-      background: rgba(255,255,255,0.06);
+      background: var(--card-bg);
       padding: 2rem;
       border-radius: 16px;
       border: 1px solid rgba(255,255,255,0.1);
@@ -90,9 +98,9 @@
       margin-bottom: 1rem;
       outline: none;
     }
-    input:focus { border-color: #ff6b35; }
+    input:focus { border-color: var(--brand-primary); }
     button {
-      background: linear-gradient(135deg, #ff6b35, #f7c948);
+      background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
       color: #000;
       font-weight: 700;
       font-size: 1.1rem;
@@ -127,7 +135,7 @@
 </head>
 <body>
   <div class="container">
-    <!-- Replace with your logo path, or use text -->
+    <!-- 🔥 Replace 'assets/eraclash-logo.png' with your logo file path -->
     <img src="assets/eraclash-logo.png" alt="EraClash Logo" class="logo" />
 
     <h1>Create the Sports Chaos.<br />Settle Every Debate.</h1>
@@ -142,14 +150,14 @@
       <div class="feature-item"><strong>🚀 Be First in Line</strong>Waitlist members get exclusive early access and can submit matchups we’ll feature on launch day.</div>
     </div>
 
-    <form action="https://formspree.io/f/mpqbyryd" method="POST">
+    <!-- 🔥 Replace the xxxxxxxx with your Formspree endpoint -->
+    <form action="https://formspree.io/f/xxxxxxxx" method="POST">
       <label for="email">Enter your email to join the EraClash waitlist.</label>
       <input type="email" name="email" id="email" placeholder="you@email.com" required />
       
       <label for="matchup">What matchup should we simulate on launch day?</label>
       <input type="text" name="matchup" id="matchup" placeholder="e.g. 2004 Pistons vs 2017 Warriors" />
       
-      <!-- Hidden field to redirect to a thank-you page (optional) -->
       <input type="hidden" name="_next" value="https://eraclash.com/thanks.html" />
       <button type="submit">Claim My Early Access Spot</button>
     </form>
